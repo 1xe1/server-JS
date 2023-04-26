@@ -2,14 +2,29 @@ require('dotenv').config()
 require('express-async-errors')
 const express = require('express');
 const app = express()
+const path = require('path')
+const cookieParser = require('cookie-parser')
 const cors = require('cors')
 const coreOptions = require('./src/config/corsOptions')
 const mongoose = require('mongoose');
+const connectDB = require('./src/config/dbConn');
 
+connectDB()
 
 app.use(express.json())
-app.use(cors())
+app.use(cors(coreOptions))
+app.use(cookieParser())
 
-console.log(process.env.PORT)
+app.use('/', express.static(path.join(__dirname, 'public')));
 
-app.listen(3300,() => console.log('Server is runing with port 3300'))
+app.use('/api/auth',require('./src/routes/authRoutes'))
+//http://localhost:3300/api/auth
+/*mongoose setup*/
+const port = process.env.PORT || 5001
+
+mongoose.connection.once('open',() => {
+    console.log('Connected to MongoDB')
+    app.listen(port,() => console.log(`Server is runing with port ${port}`))
+})
+
+mongoose.connection.on('error', (err) => console.log(err))
